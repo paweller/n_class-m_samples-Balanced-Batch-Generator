@@ -1,4 +1,6 @@
 {
+    "num_epochs": 20,
+
     "classes_per_batch": 75,
     "samples_per_class": 10,
     "shuffle": "True"
