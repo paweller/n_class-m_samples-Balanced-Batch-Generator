@@ -33,7 +33,7 @@ Returns:
 ```python
 from tensorflow.keras.utils import to_categorical
 
-from utils import Params
+from utils import Params, reshape_data
 from batch_generator import BatchGenerator
 
 # Load the parameters
