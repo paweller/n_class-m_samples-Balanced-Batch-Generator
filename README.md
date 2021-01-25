@@ -23,7 +23,7 @@ Arguments:
 - `labels` *(numpy.ndarray)*: Data's labels.
 - `batch_size` *(int)*: Batch size.
 - `categorical` *(bool)(optional)(default=False)*: If true, the generator yields binary class matrices. Otherwise, it yields class vectors.
-- `seed` *(optional)(default=None)* Random seed.
+- `seed` *(optional)(default=None)*: Random seed.
 
 Returns:
 - A Keras-compatible generator yielding batches as `batch_data, batch_lables`.
