@@ -46,6 +46,11 @@ train_labels = ...   # shape (num_labels,)
 valid_data = ...
 valid_labels = ...   # shape (num_labels,)
 
+# Optional step: To make sure data is formatted correctly, the
+# `reshape_data` function from the `utils.py` file can be used.
+train_data = reshape_data(train_data)
+valid_data = reshape_data(valid_data)
+
 # Create generator objects for training and validation
 train_generator = BatchGenerator(
     data=train_data,
