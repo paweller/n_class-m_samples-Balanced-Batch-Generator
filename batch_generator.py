@@ -1,64 +1,76 @@
-import math
-import random
 import numpy as np
 from tensorflow.keras.utils import Sequence
 
 
-def _check_validity(data, labels, batch_size):
-    if data.shape[0] != labels.shape[0]:
+def _check_validity(self):
+    if self.data.shape[0] != self.labels.shape[0]:
         raise ValueError('Args `x` and `y` must have the same length.')
-    if data.shape[0] < 1:
+    if self.data.shape[0] < 1:
         raise ValueError('Args `x` and `y` must not be empty.')
-    if len(np.squeeze(labels).shape) != 2:
+    if len(np.squeeze(self.labels).shape) != 2:
         raise ValueError(
             'Arg `y` must have a shape of (num_samples, num_classes). ' +
             'You can use `keras.utils.to_categorical` to convert a class ' +
             'vector to a binary class matrix.'
         )
-    if batch_size < 1:
+    if self.batch_size < 1:
         raise ValueError('Arg `batch_size` must be a positive integer.')
 
 
-def _initialization(data, labels, batch_size, categorical):
-    num_samples = labels.shape[0]
-    num_classes = labels.shape[1]
+def _initialization(self):
+    num_samples = self.labels.shape[0]
+    num_classes = self.labels.shape[1]
     classes_by_int = list(np.arange(num_classes))
-    batch_data_shape = (batch_size, *data.shape[1:])
-    batch_labels_shape = (batch_size, num_classes)\
-        if categorical else (batch_size,)
+    batch_data_shape = (self.batch_size, *self.data.shape[1:])
+    batch_labels_shape = (self.batch_size, num_classes)\
+        if self.categorical else (self.batch_size,)
     samples = [[] for _ in range(num_classes)]
+    class_monitoring = np.ones(shape=num_classes, dtype=int)
 
     # Order samples according to their class
     for i in range(num_samples):
-        samples[int(np.argmax(labels[i]))].append(data[i])
+        samples[int(np.argmax(self.labels[i]))].append(self.data[i])
     for c, s in enumerate(samples):
         if len(s) < 1:
             raise ValueError('Class {} has no samples.'.format(c))
 
     return samples, num_classes, classes_by_int, batch_data_shape,\
-           batch_labels_shape
+           batch_labels_shape, class_monitoring
 
 
-def _balanced_batch(data, labels, samples, classes_per_batch,
-                    samples_per_class, batch_size, num_classes, classes_by_int,
-                    batch_data_shape, batch_labels_shape, shuffle, categorical,
-                    rand):
-    batch_data = np.ndarray(shape=batch_data_shape, dtype=data.dtype)
-    batch_labels = np.zeros(shape=batch_labels_shape, dtype=labels.dtype)
-    indexes = [0 for _ in range(num_classes)]
-    random_class_pool = rand.sample(
-        population=classes_by_int, k=classes_per_batch)
-    for i in range(batch_size):
-        random_class = rand.choice(random_class_pool)
+def _balanced_batch(self):
+    batch_data = np.ndarray(shape=self.batch_data_shape,
+                            dtype=self.data.dtype)
+    batch_labels = np.zeros(shape=self.batch_labels_shape,
+                            dtype=self.labels.dtype)
+    class_sum = np.sum(self.class_monitoring)
+    class_monitoring_probability = [class_sum / cm
+                                    for cm in self.class_monitoring]
+    class_sum = np.sum(class_monitoring_probability)
+    class_monitoring_probability = [cm / class_sum
+                                    for cm in class_monitoring_probability]
+    random_class_pool = self.rng.choice(
+        self.classes_by_int,
+        size=self.classes_per_batch,
+        replace=False,
+        p=class_monitoring_probability
+    )
+    for class_idx in random_class_pool:
+        self.class_monitoring[class_idx] += 1
+
+    indexes = [0 for _ in range(self.num_classes)]
+    for i in range(self.batch_size):
+        random_class = self.rng.choice(random_class_pool, replace=True)
         current_index = indexes[random_class]
-        if current_index > samples_per_class - 2:
-            random_class_pool.remove(random_class)
+        if current_index > self.samples_per_class - 2:
+            random_class_pool = np.delete(random_class_pool,
+                np.argwhere(random_class_pool == random_class))
         indexes[random_class] = (current_index + 1)\
-            % len(samples[random_class])
-        if shuffle and current_index == 0:
-            rand.shuffle(samples[random_class])
-        batch_data[i] = samples[random_class][current_index]
-        if categorical:
+            % len(self.samples[random_class])
+        if self.shuffle and current_index == 0:
+            self.rng.shuffle(self.samples[random_class])
+        batch_data[i] = self.samples[random_class][current_index]
+        if self.categorical:
             batch_labels[i][random_class] = 1
         else:
             batch_labels[i] = random_class
@@ -100,13 +112,12 @@ class BatchGenerator(Sequence):
         self.shuffle = params.shuffle
         self.categorical = categorical
         self.seed = seed
-        self.rand = random.Random(self.seed)
+        self.rng = np.random.default_rng(self.seed)
 
-        _check_validity(self.data, self.labels, self.batch_size)
+        _check_validity(self)
         self.samples, self.num_classes, self.classes_by_int,\
-            self.batch_data_shape, self.batch_labels_shape\
-            = _initialization(self.data, self.labels, self.batch_size,
-                              self.categorical)
+            self.batch_data_shape, self.batch_labels_shape,\
+            self.class_monitoring = _initialization(self)
 
     def __len__(self):
         """Number of batches in the sequence.
@@ -115,17 +126,12 @@ class BatchGenerator(Sequence):
             The number of batches in the sequence.
         """
 
-        return math.ceil(len(self.labels) / self.batch_size)
+        return int(np.ceil(len(self.labels) / self.batch_size))
 
     def __getitem__(self, _):
         """Get one batch.
 
         Returns:
-            batched_data, batched_labels: One batch.
+            batch_data, batch_labels: One batch.
         """
-        return _balanced_batch(self.data, self.labels, self.samples,
-                               self.classes_per_batch, self.samples_per_class,
-                               self.batch_size, self.num_classes,
-                               self.classes_by_int, self.batch_data_shape,
-                               self.batch_labels_shape, self.shuffle,
-                               self.categorical, self.rand)
+        return _balanced_batch(self)
