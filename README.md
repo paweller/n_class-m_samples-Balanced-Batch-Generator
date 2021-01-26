@@ -83,4 +83,4 @@ history = siamese_net_model.fit(
 
 ## Sources
 
-- This repository builds on soroushj implementation of a [keras-balanced-batch-generator: A Keras-compatible generator for creating balanced batches](https://github.com/soroushj/keras-balanced-batch-generator). Go over to his GitHub page and check out his work.
+- This repository builds on soroushj's implementation of a [keras-balanced-batch-generator: A Keras-compatible generator for creating balanced batches](https://github.com/soroushj/keras-balanced-batch-generator). Go over to his GitHub page and check out his work.
