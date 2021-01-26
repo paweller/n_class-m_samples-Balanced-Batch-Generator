@@ -23,7 +23,7 @@ generator = BatchGenerator(
 Arguments:
 - `data` *(numpy.ndarray)*: Input data.
 - `labels` *(numpy.ndarray)*: Data's labels.
-- `params` *(object)*: Object of a class. Must include parameters `classes_per_batch` *(int)*, `samples_per_class` *(int)* and `shuffle` *(int)*.
+- `params` *(object)*: Object of a class. Must include parameters `classes_per_batch` *(int)*, `samples_per_class` *(int)* and `shuffle` *(bool)*.
 - `categorical` *(bool)(optional)(default=False)*: If true, the generator yields binary class matrices. Otherwise, it yields class vectors.
 - `seed` *(optional)(default=None)*: Random seed.
 
