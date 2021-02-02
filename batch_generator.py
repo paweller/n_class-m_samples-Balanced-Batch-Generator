@@ -7,7 +7,7 @@ def _check_validity(self):
         raise ValueError('Args `x` and `y` must have the same length.')
     if self.data.shape[0] < 1:
         raise ValueError('Args `x` and `y` must not be empty.')
-    if len(np.squeeze(self.labels).shape) != 2:
+    if len(self.labels.shape) != 2:
         raise ValueError(
             'Arg `y` must have a shape of (num_samples, num_classes). ' +
             'You can use `keras.utils.to_categorical` to convert a class ' +
