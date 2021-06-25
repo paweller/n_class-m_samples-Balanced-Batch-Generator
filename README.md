@@ -69,7 +69,7 @@ valid_generator = BatchGenerator(
 # Create, compile and fit a sequential model
 model = ...
 
-siamese_net_model.compile(
+model.compile(
     optimizer=...,
     loss=...
 )
