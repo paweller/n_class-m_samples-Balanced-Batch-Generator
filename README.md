@@ -74,7 +74,7 @@ model.compile(
     loss=...
 )
 
-history = siamese_net_model.fit(
+history = model.fit(
     x=train_generator,
     validation_data=valid_generator,
     epochs=params.num_epochs
